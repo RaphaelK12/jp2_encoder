@@ -1021,7 +1021,7 @@ int File_Format::insert_zeros(int number_of_zeros)
 
 int File_Format::run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q, queue<pktParamfnl> *qnt_q)
 {
-    fp = fopen("bmw_1014.jp2","wb");
+    fp = fopen("/../../bmw_1014.jp2","wb");
     tmp_b[0] = 0;
     remain_bits = 8;
 
