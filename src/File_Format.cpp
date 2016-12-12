@@ -111,14 +111,14 @@ int File_Format::Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stre
 
     if (hdr_info->no_of_cmp ==1)
     {
-        for (int i = 0; i < 2; ++i)
+        for (int i = 0; i < 1; ++i)
         {
             packet(i,hdr_q,code_stream_q);
         }
     }
     else if (hdr_info->no_of_cmp == 3)
     {   
-        for (int i = 0; i < 2; ++i)
+        for (int i = 0; i < 6; ++i)
         {
             packet(i,hdr_q,code_stream_q);
         }
@@ -466,9 +466,9 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
                              insert_value(1,1);
 
                              insert_zeros(q[3][0][0]);
-                             insert_zeros(q[2][0][0]);                       // zero bit planes
-                             insert_zeros(q[1][0][0]);
-                             insert_zeros(q[0][0][0]);
+                             insert_zeros(q[3][0][0]-q[2][0][0]);                       // zero bit planes
+                             insert_zeros(q[2][0][0]-q[1][0][0]);
+                             insert_zeros(q[1][0][0]-q[0][0][0]);
                          }
                      else
                      {
@@ -478,9 +478,9 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
                              insert_value(1,1);
                              insert_value(1,1);
 
-                             insert_zeros(q[1][y/4][x/4]); 
-                             insert_zeros(q[1][y/2][x/2]);                 // zero bit planes
-                             insert_zeros(q[0][y][x]);
+                             insert_zeros(q[3][0][0]-q[1][y/4][x/4]); 
+                             insert_zeros(q[1][y/4][x/4]- q[1][y/2][x/2]);                 // zero bit planes
+                             insert_zeros(q[1][y/2][x/2]- q[0][y][x]);
                             
                         }
 
@@ -489,19 +489,19 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
                              insert_value(1,1);
                              insert_value(1,1);
 
-                             insert_zeros(q[1][y/2][x/2]);                 // zero bit planes
-                             insert_zeros(q[0][y][x]);
+                             insert_zeros(q[1][y/4][x/4]-q[1][y/2][x/2]);                 // zero bit planes
+                             insert_zeros(q[1][y/2][x/2]-q[0][y][x]);
                          }
                          else
                          {
                              insert_value(1,1);
-                             insert_zeros(q[0][y][x]);                    // zero bit planes
+                             insert_zeros(q[1][y/2][x/2]-q[0][y][x]);                    // zero bit planes
                          }
                      }
 
                      send_no_of_coding_passes(no_of_coding_passes[i]);
-                     send_Lblock(length[i],no_of_coding_passes[i]);
-                     send_length(length[i]);
+                     //send_Lblock(length[i],no_of_coding_passes[i]);
+                     //send_length(length[i]);
                 }
                 if (remain_bits < 8)                // make remain bits zero
                 {
@@ -813,14 +813,21 @@ int File_Format::send_no_of_coding_passes(int no_of_coding_passes)
 
 int File_Format::send_no_of_zero_bitplanes(int zero_bit_planes)
 {
-    printf("zero = %d\n", zero_bit_planes);
 
-    for (int i = 0; i < zero_bit_planes; ++i)
+    if (zero_bit_planes >= 0)
     {
-        insert_value(1,0);
-    }
+        printf("zero in funtions = %d\n",zero_bit_planes);
 
-    insert_value(1,1);
+        for (int i = 0; i < zero_bit_planes; ++i)
+        {
+            insert_value(1,0);
+        } 
+        insert_value(1,1); 
+    }
+    else
+    {
+        printf("error_in zero_bit_planes\n");
+    }
 
     /*if ((zero_bit_planes+1) < remain_bits )
     {
@@ -870,7 +877,7 @@ int File_Format::send_no_of_zero_bitplanes(int zero_bit_planes)
 }
 int File_Format::send_length(int length)
 {
-
+    printf("length = %d\n",length);
     insert_value(int(log2(length)) +1,length);
     return 1;
 }
@@ -896,7 +903,6 @@ int File_Format::send_Lblock(int length , int no_of_coding_passes)
 
 int File_Format::insert_value(int bit_cntr, int value)
 {
-
 
     if (bit_cntr<=8)
     {
@@ -943,6 +949,7 @@ int File_Format::insert_value(int bit_cntr, int value)
     }
     else if ((8 < bit_cntr)&&( bit_cntr < 16))
     {
+        printf("8 < bit_cntr < 16 \n");
 
         tmp_b[0] = tmp_b[0] + uint8_t(value >> (bit_cntr - remain_bits));
         fwrite(tmp_b,1,1,fp);
@@ -1069,7 +1076,7 @@ int File_Format::insert_zeros(int number_of_zeros)
 
 int File_Format::run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q, queue<pktParamfnl> *qnt_q, img_hdr_info *hdr_info)
 {
-    fp = fopen("../../bmw_128_rgb.jp2","wb");
+    fp = fopen("../../bmw_1024.jp2","wb");
     tmp_b[0] = 0;
     remain_bits = 8;
 

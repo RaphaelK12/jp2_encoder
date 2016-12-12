@@ -51,7 +51,7 @@ struct cblock{
         };
 
 struct sbandPkt{
-    int    sband[64][64];
+    int    sband[512][512];
 };
 
 struct context {
@@ -68,7 +68,7 @@ struct RLCcontext {
 };
 
 struct image{
-    long imarray[128][128];
+    long imarray[1024][1024];
 };
 
 struct pktParamBPC

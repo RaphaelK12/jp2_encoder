@@ -41,7 +41,7 @@ int main()
     img_hdr_info *hdr_info_ptr;
 
     ////////////////////////////////////////////////////////// open image //////////////////////////////////////////////////////////////
-    FILE* f = fopen("image2.bmp","r");
+    FILE* f = fopen("bmwGray1024.bmp","r");
     if(f!=NULL){
         cout << "succussfully open file" << endl;
     }

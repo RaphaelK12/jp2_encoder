@@ -815,8 +815,8 @@ int EbcotCoder::cbloader (queue <sbandPkt> *llblock, queue <sbandPkt> *lhblock, 
     cblock cbhl;
     cblock cbhh;
 
-    int sbwidth = 64;
-    int sbheight = 64;
+    int sbwidth = 512;
+    int sbheight = 512;
     int istart, iend, jstart, jend = 0;
     int lldone = 0;
 
