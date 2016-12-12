@@ -22,13 +22,13 @@ class File_Format
         /*functions*/
         int JP2_Signature_box(void);
         int Profile_box(void);
-        int JP2_Header_box(int height,int width,int bcp);
-        int Img_header_box(int height,int width,int bpc);
-        int Colour_Spec_box(void);
-        int Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stream_q,queue<pktParamfnl> *qnt_q);
+        int JP2_Header_box(img_hdr_info *hdr_info,int bcp);
+        int Img_header_box(img_hdr_info *hdr_info,int bpc);
+        int Colour_Spec_box(img_hdr_info *hdr_info);
+        int Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stream_q,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info);
 
         int SOC(void);
-        int SIZ(int width,int height, int bcp,int s1,int s2);
+        int SIZ(img_hdr_info *hdr_info, int bcp,int s1,int s2);
         int COD(int op, int delta_t, int D_t, int E1_cb, int E2_cb);
         int QCD(queue<pktParamfnl> *qnt_q);
         int SOT(void);
@@ -46,5 +46,5 @@ class File_Format
         int insert_zeros(int number_of_zeros);
         int send_Lblock(int length , int no_of_coding_passes);
         int push_bytes(int byte_cnt, uint32_t value);
-        int run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q,queue<pktParamfnl> *qnt_q);
+        int run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info);
 };

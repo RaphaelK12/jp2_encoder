@@ -36,26 +36,26 @@ int File_Format::Profile_box(void){
     return 1;
 }
 
-int File_Format::JP2_Header_box(int height,int width,int bpc){
+int File_Format::JP2_Header_box(img_hdr_info *hdr_info,int bpc){
 
 
     push_bytes(4,uint32_t(0x002d));             // Lbox
     push_bytes(4,uint32_t(0x6A703268));      // Tbox
 
-    Img_header_box(height,width,bpc);
-    Colour_Spec_box();
+    Img_header_box(hdr_info,bpc);
+    Colour_Spec_box(hdr_info);
     return 1;
 }
 
-int File_Format::Img_header_box(int height,int width,int bpc){
+int File_Format::Img_header_box(img_hdr_info *hdr_info,int bpc){
 
 
     push_bytes(4,uint32_t(0x16));       //Lbox
     push_bytes(4,uint32_t(0x69686472)); // Tbox
-    push_bytes(4,uint32_t(height));     //height
-    push_bytes(4,uint32_t(width));      //width
+    push_bytes(4,uint32_t(hdr_info->height));     //height
+    push_bytes(4,uint32_t(hdr_info->width));      //width
 
-    push_bytes(2,uint32_t(0x1));       // C
+    push_bytes(2,uint32_t(hdr_info->no_of_cmp));       // C
 
 
     uint8_t tmp_b[4];
@@ -69,7 +69,7 @@ int File_Format::Img_header_box(int height,int width,int bpc){
     return 1;
 }
 
-int File_Format::Colour_Spec_box(void){
+int File_Format::Colour_Spec_box(img_hdr_info *hdr_info){
 
     push_bytes(4,uint32_t(0x0F));        // Lbox
     push_bytes(4,uint32_t(0x636F6C72));  // Tbox
@@ -83,13 +83,19 @@ int File_Format::Colour_Spec_box(void){
 
     fwrite(tmp_b,1,3,fp);
 
-    push_bytes(4,uint32_t(0x11));        // //Enumes(colour space)
-
+    if (hdr_info->no_of_cmp == 1)
+    {
+        push_bytes(4,uint32_t(0x11));        // //Enumes(colour space) // mono crome
+    }
+    else if (hdr_info->no_of_cmp == 3)
+    {
+        push_bytes(4,uint32_t(0x10));       // //Enumes(colour space) // RGB
+    }
 
     return 1;
 }
 
-int File_Format::Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stream_q,queue<pktParamfnl> *qnt_q) ////////////////////////////////////////////(have to write)
+int File_Format::Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stream_q,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info) ////////////////////////////////////////////(have to write)
 {
 
     push_bytes(4,uint32_t(0x0));                         //Lbox
@@ -97,15 +103,32 @@ int File_Format::Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stre
 
 
     SOC();
-    SIZ(128,128,8,1,1);              //  width =128 // height =128 // bcp =8// s1 = 1 // s2 = 1
-    COD(2,1,1,4,4);                   // Op =2 // delta_t =0 // D_t =1 // E1_cb =4 // E2_cb
+    SIZ(hdr_info,8,1,1);              //  width =128 // height =128 // bcp =8// s1 = 1 // s2 = 1
+    COD(2,1,1,4,4);                   // Op =2 (RLCP)// delta_t =0 // D_t =1 // E1_cb =4 // E2_cb
     QCD(qnt_q);                     /////////////////////////////// E_b 10  // U_b =0 fill
     SOT();
     SOD();
-    for (int i = 0; i < 1; ++i)
+
+    if (hdr_info->no_of_cmp ==1)
     {
-       packet(i,hdr_q,code_stream_q);
+        for (int i = 0; i < 2; ++i)
+        {
+            packet(i,hdr_q,code_stream_q);
+        }
     }
+    else if (hdr_info->no_of_cmp == 3)
+    {   
+        for (int i = 0; i < 2; ++i)
+        {
+            packet(i,hdr_q,code_stream_q);
+        }
+        
+    }
+    else
+    {
+        printf("error in no of component\n");
+    }
+
     EOC();
     return 1;
 }
@@ -118,36 +141,61 @@ int File_Format::SOC(void){
     return 1;
 }
 
-int File_Format::SIZ(int width,int height, int bcp,int s1,int s2){
+int File_Format::SIZ(img_hdr_info *hdr_info, int bcp,int s1,int s2){
 
 
 
     push_bytes(2,uint16_t(0xFF51));  // SIZ
-    push_bytes(2,uint16_t(0x0029));  // Lsiz
+
+    if (hdr_info->no_of_cmp == 1)
+    {
+        push_bytes(2,uint16_t(0x0029));  // Lsiz
+    }
+    else if (hdr_info->no_of_cmp == 3)
+    {
+         push_bytes(2,uint16_t(0x002f));  // Lsiz
+    }
+    else 
+    {
+        printf("error in nof component\n");
+    }
+    
     push_bytes(2,uint16_t(0x0000));  //CA
 
 
-
-    push_bytes(4,uint32_t(width));       // F2
-    push_bytes(4,uint32_t(height));      // F1
+    push_bytes(4,uint32_t(hdr_info->width));       // F2
+    push_bytes(4,uint32_t(hdr_info->height));      // F1
     push_bytes(4,uint32_t(0x0));         // E2
     push_bytes(4,uint32_t(0x0));         // E1
-    push_bytes(4,uint32_t(width));       // T2
-    push_bytes(4,uint32_t(height));      // T1
+    push_bytes(4,uint32_t(hdr_info->width));       // T2
+    push_bytes(4,uint32_t(hdr_info->height));      // T1
     push_bytes(4,uint32_t(0x0));         // omg2
     push_bytes(4,uint32_t(0x0));         // omg1
 
-
-    push_bytes(2,uint16_t(0x0001));   // C
-
     uint8_t tmp_b[3];
 
-    tmp_b[0] = uint8_t((bcp-1));        // B     ///////////////////////////////////////////////////////// filll
-    tmp_b[1] = uint8_t(s2);         // s2
-    tmp_b[2] = uint8_t(s1);         // s1
+    if (hdr_info->no_of_cmp == 1)
+    {
+        push_bytes(2,uint16_t(0x0001));   // C
+        tmp_b[0] = uint8_t((bcp-1));        // B     ///////////////////////////////////////////////////////// filll
+        tmp_b[1] = uint8_t(s2);         // s2
+        tmp_b[2] = uint8_t(s1);         // s1
+    }
+    else if (hdr_info->no_of_cmp == 3)
+    {   
+        push_bytes(2,uint16_t(0x0003));   // C
 
-
-
+        for (int i = 0; i < hdr_info->no_of_cmp; ++i)
+        {
+            tmp_b[0] = uint8_t((bcp-1));        // B     ///////////////////////////////////////////////////////// filll
+            tmp_b[1] = uint8_t(s2);         // s2
+            tmp_b[2] = uint8_t(s1);         // s1 
+         }
+    }
+    else 
+    {
+        printf("error in nof component\n");
+    }
 
     fwrite(tmp_b,1,3,fp);
 
@@ -293,7 +341,7 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
     int suband_width  = tile_width/(2*DWT_r * 64 );
     int suband_height = tile_height/(2*DWT_r * 64 );
 
-    if (pkt_index == 0)
+    if (pkt_index%2 == 0)
     {
         int suband_width  = tile_width/(2*DWT_r * 64 );
         int suband_height = tile_height/(2*DWT_r * 64 );
@@ -477,7 +525,7 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
     }
     else
     {
-        if(pkt_index == 1)
+        if(pkt_index%2 == 1)
         {
             if (suband_width == 1 && suband_height == 1)
             {
@@ -1019,18 +1067,18 @@ int File_Format::insert_zeros(int number_of_zeros)
 }
 //----------------------- make file_____________________//
 
-int File_Format::run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q, queue<pktParamfnl> *qnt_q)
+int File_Format::run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q, queue<pktParamfnl> *qnt_q, img_hdr_info *hdr_info)
 {
-    fp = fopen("/../../bmw_1014.jp2","wb");
+    fp = fopen("../../bmw_128_rgb.jp2","wb");
     tmp_b[0] = 0;
     remain_bits = 8;
 
-    tile_width =sbsize*2 ,tile_height = sbsize*2;  DWT_r = 1;     // get_image_width height and DWT r
+    tile_width =hdr_info->width ,tile_height = hdr_info->height;  DWT_r = 1;     // get_image_width height and DWT r
 
     JP2_Signature_box();
     Profile_box();
-    JP2_Header_box(tile_width,tile_height,8);                   // width =128 // height = 128 //
-    Code_Stream_box(hdr_q,code_stream_q,qnt_q);
+    JP2_Header_box(hdr_info,8);                   // width =128 // height = 128 //
+    Code_Stream_box(hdr_q,code_stream_q,qnt_q,hdr_info);
     fclose(fp);
     return 1;
 }

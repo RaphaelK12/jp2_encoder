@@ -51,7 +51,7 @@ struct cblock{
         };
 
 struct sbandPkt{
-    int    sband[512][512];
+    int    sband[64][64];
 };
 
 struct context {
@@ -68,7 +68,7 @@ struct RLCcontext {
 };
 
 struct image{
-    long imarray[1012][1024];
+    long imarray[128][128];
 };
 
 struct pktParamBPC
@@ -88,6 +88,13 @@ struct pktParamfnl
     int HLm;
     int HHe;
     int HHm;
+};
+
+struct img_hdr_info
+{
+ int width;
+ int height;
+ int no_of_cmp;   
 };
 
 #endif /* PACKETDEFS_H__ */

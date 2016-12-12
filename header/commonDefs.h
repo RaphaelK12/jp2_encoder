@@ -19,7 +19,7 @@
 using namespace std;
 
 const int bpsize = 64;
-const int sbsize = 512;
+const int sbsize = 64;
 const int coefShift = 13;
 const int preShift = 11;
 
