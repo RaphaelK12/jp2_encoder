@@ -64,7 +64,7 @@ int main()
 
 
     ////////////////////////////////////////////////////////// open image //////////////////////////////////////////////////////////////
-    FILE* f = fopen("bmwGray1024.bmp","r");
+    FILE* f = fopen("tiger_1024_rgb.bmp","r");
     if(f!=NULL){
         cout << "succussfully open file" << endl;
     }

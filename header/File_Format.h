@@ -41,7 +41,7 @@ class File_Format
         int send_no_layers(int no_of_layers);
         int send_no_of_coding_passes(int no_of_coding_passes);
         int send_no_of_zero_bitplanes(int zero_bit_planes);
-        int send_length( int length);
+        int send_length( int length,int bits);
         int insert_value(int bit_cntr, int value);
         int insert_zeros(int number_of_zeros);
         int send_Lblock(int length , int no_of_coding_passes);
