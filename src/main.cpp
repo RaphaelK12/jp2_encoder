@@ -109,10 +109,13 @@ int main()
     printf("read pixels = %d\n",t);
     if (no_of_color_planes == 1)
     {
-        for (int i=0; i<size; i++){
 
-            queue2_r.push(long(data[i] -128));
-
+        for (int i = 0; i < width; ++i)
+        {
+            for (int j = (height-1); j >= 0; --j)
+            {
+                queue2_r.push(long(data[j*width + i] -128));   
+            }
         }
         
         wavelet_r->run(&queue2_r, &queue3_r, &queue1_r);
@@ -135,27 +138,36 @@ int main()
             data[i+2]         = tmp;
         }
 
-        for (int i=0; i<size; i +=3){                                                       ////////////////   R
-
-            queue2_r.push(long(data[i] -128));
+        for (int i = 0; i < 3*width; i+=3)
+        {
+            for (int j = 3*(height-1); j >= 0; j-=3)
+            {
+                queue2_r.push(long(data[j*width + i] -128));   
+            }
         }
         wavelet_r->run(&queue2_r, &queue3_r, &queue1_r);
         quantizer_r->run(&queue3_r,&LL_r, &HL_r, &LH_r, &HH_r, &param2BPC_r, &param2fnl);
         ebcotcoder_r->run(&LL_r, &LH_r, &HL_r, &HH_r, &CONTEXT_r, &param2BPC_r); // LL LH HL HH
         mqcoder_r->run(&CONTEXT_r, &queue4_r, &queue5_r);
 
-        for (int i=0; i<size; i+=3){                                                     //////////////////// G
-
-            queue2_g.push(long(data[i+1] -128));
+        for (int i = 0; i < 3*width; i+=3)
+        {
+            for (int j = 3*(height-1); j >= 0; j-=3)
+            {
+                queue2_g.push(long(data[j*width + i +1] -128));   
+            }
         }
         wavelet_g->run(&queue2_g, &queue3_g, &queue1_g);
         quantizer_g->run(&queue3_g,&LL_g, &HL_g, &LH_g, &HH_g, &param2BPC_g, &param2fnl);
         ebcotcoder_g->run(&LL_g, &LH_g, &HL_g, &HH_g, &CONTEXT_g, &param2BPC_g); // LL LH HL HH
         mqcoder_g->run(&CONTEXT_g, &queue4_g, &queue5_g);
 
-        for (int i=0; i<size; i+=3){												      ////////////////////// B
-
-            queue2_b.push(long(data[i+2] -128));
+        for (int i = 0; i < 3*width; i+=3)
+        {
+            for (int j = 3*(height-1); j >= 0; j-=3)
+            {
+                queue2_b.push(long(data[j*width + i +2] -128));   
+            }
         }
         wavelet_b->run(&queue2_b, &queue3_b, &queue1_b);
         quantizer_b->run(&queue3_b,&LL_b, &HL_b, &LH_b, &HH_b, &param2BPC_b, &param2fnl);

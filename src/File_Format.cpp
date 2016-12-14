@@ -111,7 +111,7 @@ int File_Format::Code_Stream_box(queue<int> *hdr_q_r,queue<uint8_t> *code_stream
 
     if (hdr_info->no_of_cmp ==1)
     {
-        for (int i = 0; i < 1; ++i)
+        for (int i = 0; i < 2; ++i)
         {
             packet(i,hdr_q_r,code_stream_q_r,hdr_info);
         }
@@ -122,9 +122,9 @@ int File_Format::Code_Stream_box(queue<int> *hdr_q_r,queue<uint8_t> *code_stream
         packet(0,hdr_q_r,code_stream_q_r,hdr_info);
         packet(1,hdr_q_g,code_stream_q_g,hdr_info);
         packet(2,hdr_q_b,code_stream_q_b,hdr_info);
-        //packet(3,hdr_q_r,code_stream_q_r,hdr_info);
-        //packet(4,hdr_q_g,code_stream_q_g,hdr_info);
-        //packet(5,hdr_q_b,code_stream_q_b,hdr_info);
+        packet(3,hdr_q_r,code_stream_q_r,hdr_info);
+        packet(4,hdr_q_g,code_stream_q_g,hdr_info);
+        packet(5,hdr_q_b,code_stream_q_b,hdr_info);
     }
     else
     {
@@ -772,9 +772,9 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
                 }
                 push_bytes(2,uint16_t(0xFF92));     // EPH
 
-                for (int i = 0; i < 48; ++i)
+                for (int i = 0; i < 3*64; ++i)
                 {
-                    code_block(length[i/16][i%16],code_stream_q);
+                    code_block(length[i/64][i%64],code_stream_q);
                 }
             }
             else
@@ -1180,7 +1180,7 @@ int File_Format::insert_zeros(int number_of_zeros)
 
 int File_Format::run(queue<int> *hdr_q_r,queue<uint8_t> *code_stream_q_r,queue<int> *hdr_q_g,queue<uint8_t> *code_stream_q_g,queue<int> *hdr_q_b,queue<uint8_t> *code_stream_q_b,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info)
 {
-    fp = fopen("../../tiger_1024_rgb_our.jp2","wb");
+    fp = fopen("../../tiger_1024_rgb_LL.jp2","wb");
     tmp_b[0] = 0;
     remain_bits = 8;
 
@@ -1188,7 +1188,7 @@ int File_Format::run(queue<int> *hdr_q_r,queue<uint8_t> *code_stream_q_r,queue<i
 
     JP2_Signature_box();
     Profile_box();
-    JP2_Header_box(hdr_info,8);                   // width =128 // height = 128 //
+    JP2_Header_box(hdr_info,8);          
     Code_Stream_box(hdr_q_r,code_stream_q_r,hdr_q_g,code_stream_q_g,hdr_q_b,code_stream_q_b,qnt_q,hdr_info);
     fclose(fp);
     return 1;
