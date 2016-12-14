@@ -95,7 +95,7 @@ int File_Format::Colour_Spec_box(img_hdr_info *hdr_info){
     return 1;
 }
 
-int File_Format::Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stream_q,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info) ////////////////////////////////////////////(have to write)
+int File_Format::Code_Stream_box(queue<int> *hdr_q_r,queue<uint8_t> *code_stream_q_r,queue<int> *hdr_q_g,queue<uint8_t> *code_stream_q_g,queue<int> *hdr_q_b,queue<uint8_t> *code_stream_q_b,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info) ////////////////////////////////////////////(have to write)
 {
 
     push_bytes(4,uint32_t(0x0));                         //Lbox
@@ -113,16 +113,18 @@ int File_Format::Code_Stream_box(queue<int> * hdr_q, queue<uint8_t>  * code_stre
     {
         for (int i = 0; i < 1; ++i)
         {
-            packet(i,hdr_q,code_stream_q);
+            packet(i,hdr_q_r,code_stream_q_r,hdr_info);
         }
     }
     else if (hdr_info->no_of_cmp == 3)
     {   
-        for (int i = 0; i < 6; ++i)
-        {
-            packet(i,hdr_q,code_stream_q);
-        }
-        
+
+        packet(0,hdr_q_r,code_stream_q_r,hdr_info);
+        packet(1,hdr_q_g,code_stream_q_g,hdr_info);
+        packet(2,hdr_q_b,code_stream_q_b,hdr_info);
+        packet(3,hdr_q_r,code_stream_q_r,hdr_info);
+        packet(4,hdr_q_g,code_stream_q_g,hdr_info);
+        packet(5,hdr_q_b,code_stream_q_b,hdr_info);
     }
     else
     {
@@ -180,6 +182,8 @@ int File_Format::SIZ(img_hdr_info *hdr_info, int bcp,int s1,int s2){
         tmp_b[0] = uint8_t((bcp-1));        // B     ///////////////////////////////////////////////////////// filll
         tmp_b[1] = uint8_t(s2);         // s2
         tmp_b[2] = uint8_t(s1);         // s1
+
+        fwrite(tmp_b,1,3,fp);
     }
     else if (hdr_info->no_of_cmp == 3)
     {   
@@ -190,6 +194,8 @@ int File_Format::SIZ(img_hdr_info *hdr_info, int bcp,int s1,int s2){
             tmp_b[0] = uint8_t((bcp-1));        // B     ///////////////////////////////////////////////////////// filll
             tmp_b[1] = uint8_t(s2);         // s2
             tmp_b[2] = uint8_t(s1);         // s1 
+
+            fwrite(tmp_b,1,3,fp);
          }
     }
     else 
@@ -197,7 +203,7 @@ int File_Format::SIZ(img_hdr_info *hdr_info, int bcp,int s1,int s2){
         printf("error in nof component\n");
     }
 
-    fwrite(tmp_b,1,3,fp);
+    
 
     return 1;
 }
@@ -336,12 +342,12 @@ int File_Format::EOC(void){
     return 1;
 }
 
-int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_stream_q)
+int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_stream_q,img_hdr_info *hdr_info)
 {
     int suband_width  = tile_width/(2*DWT_r * 64 );
     int suband_height = tile_height/(2*DWT_r * 64 );
 
-    if (pkt_index%2 == 0)
+    if ((hdr_info->no_of_cmp == 3 && pkt_index <3) ||(pkt_index == 0))
     {
         int suband_width  = tile_width/(2*DWT_r * 64 );
         int suband_height = tile_height/(2*DWT_r * 64 );
@@ -453,35 +459,61 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
             {
                 insert_value(1,1);                 // none zero packet
 
-                for (int i = 0; i < suband_width * suband_height; ++i)                                // sub sample pkt hdrs
+                for (int j = 0; j < 64; ++j)
                 {
-                     int y = i / 4;
-                     int x = i % 4;
+                    if (j%8 == 0)
+                    {
+                        printf("\n");
+                    }
+                    int y = j / 8;
+                    int x = j % 8;
+
+                    printf("%d   ",q[0][y][x] );
+                }
+
+                for (int i = 0; i < 64; ++i)                                // sub sample pkt hdrs
+                {
+                     int y = i / 8;
+                     int x = i % 8;
+
+                    if (i%8 == 0)
+                    {
+                             printf("\n");
+                    }
 
                      if (i == 0)                              // send no of layers and zero bit planes
                          {
+
+                            printf("packet 0 begin\n");
                              insert_value(1,1);
                              insert_value(1,1);
                              insert_value(1,1);
                              insert_value(1,1);
 
+
                              insert_zeros(q[3][0][0]);
-                             insert_zeros(q[3][0][0]-q[2][0][0]);                       // zero bit planes
-                             insert_zeros(q[2][0][0]-q[1][0][0]);
-                             insert_zeros(q[1][0][0]-q[0][0][0]);
+                             insert_zeros(q[2][0][0]-q[3][0][0]);                       // zero bit planes
+                             insert_zeros(q[1][0][0]-q[2][0][0]);
+                             insert_zeros(q[0][0][0]-q[1][0][0]);
+
+                             //printf("%d%d%d%d\t",q[3][0][0],(q[2][0][0]-q[3][0][0]),(q[1][0][0]-q[2][0][0]),(q[0][0][0]-q[1][0][0]) );
+
+                            //printf("%d  %d\t",y,x );
                          }
                      else
                      {
-                        if ((y%4 == 4)&&(x%4 == 4))
+                        if ((y%4 == 0)&&(x%4 == 0))
                         {
                              insert_value(1,1);
                              insert_value(1,1);
                              insert_value(1,1);
 
-                             insert_zeros(q[3][0][0]-q[1][y/4][x/4]); 
-                             insert_zeros(q[1][y/4][x/4]- q[1][y/2][x/2]);                 // zero bit planes
-                             insert_zeros(q[1][y/2][x/2]- q[0][y][x]);
+                             insert_zeros(q[2][y/4][x/4]-q[3][0][0]); 
+                             insert_zeros(q[1][y/2][x/2]-q[2][y/4][x/4]);                 // zero bit planes
+                             insert_zeros(q[0][y][x]-q[1][y/2][x/2]);
                             
+                            //printf("%d%d%d\t",(q[2][y/4][x/4]-q[3][0][0]),(q[1][y/2][x/2]-q[2][y/4][x/4]),(q[0][y][x]-q[1][y/2][x/2]));
+                            //printf("%d  %d\t",y,x );
                         }
 
                          else if ((y%2 == 0)&&(x%2 == 0))
@@ -489,20 +521,29 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
                              insert_value(1,1);
                              insert_value(1,1);
 
-                             insert_zeros(q[1][y/4][x/4]-q[1][y/2][x/2]);                 // zero bit planes
-                             insert_zeros(q[1][y/2][x/2]-q[0][y][x]);
+                             insert_zeros(q[1][y/2][x/2]-q[2][y/4][x/4]);                 // zero bit planes
+                             insert_zeros(q[0][y][x]-q[1][y/2][x/2]);
+
+                             //printf("%d%d\t",(q[1][y/2][x/2]-q[2][y/4][x/4]),(q[0][y][x]-q[1][y/2][x/2]));
+
+                            //printf("%d  %d\t",y,x );
                          }
                          else
                          {
                              insert_value(1,1);
-                             insert_zeros(q[1][y/2][x/2]-q[0][y][x]);                    // zero bit planes
+                             insert_zeros(q[0][y][x]-q[1][y/2][x/2]);                    // zero bit plane
+
+                             // printf("%d\t",(q[0][y][x]-q[1][y/2][x/2]));
+                            //printf("%d  %d\t",y,x );
                          }
+
                      }
 
                      send_no_of_coding_passes(no_of_coding_passes[i]);
-                     //send_Lblock(length[i],no_of_coding_passes[i]);
-                     //send_length(length[i]);
+                     send_Lblock(length[i],no_of_coding_passes[i]);
+                     send_length(length[i]);
                 }
+
                 if (remain_bits < 8)                // make remain bits zero
                 {
                     fwrite(tmp_b,1,1,fp);
@@ -525,7 +566,7 @@ int File_Format::packet(int pkt_index,queue<int> * hdr_q, queue<uint8_t> * code_
     }
     else
     {
-        if(pkt_index%2 == 1)
+        if((hdr_info->no_of_cmp == 3 && pkt_index >= 3) || pkt_index ==1)
         {
             if (suband_width == 1 && suband_height == 1)
             {
@@ -918,7 +959,7 @@ int File_Format::insert_value(int bit_cntr, int value)
 
            if (tmp_b[0] == 0xff)
            {
-            printf("in 0xff \n");
+            printf("in 0xff (<8   bit = remain_bits)remain_bits = %d  value = %d   bit_cntr = %d\n",remain_bits,value,bit_cntr);
                 tmp_b[0] = 0;
                 remain_bits = 7;
            }
@@ -929,15 +970,19 @@ int File_Format::insert_value(int bit_cntr, int value)
            }
         }
         else
-        {
+        {   
+
+            printf("%d\n",tmp_b[0] );
             tmp_b[0] = tmp_b[0] + uint8_t(value >> (bit_cntr - remain_bits));
             fwrite(tmp_b,1,1,fp);
 
             if (tmp_b[0] == 0xff)
            {
-            printf("in 0xff \n");
+            printf("in 0xff (<8   else )remain_bits = %d  value = %d   bit_cntr = %d  \n",remain_bits,value,bit_cntr);
             remain_bits = 7 - (bit_cntr - remain_bits);
-            tmp_b[0] = uint8_t(value << remain_bits);
+            tmp_b[0] = (uint8_t(value << (remain_bits+1)))>>1;
+
+            printf("%d\n",tmp_b[0] );
            }
            else
            {
@@ -949,7 +994,6 @@ int File_Format::insert_value(int bit_cntr, int value)
     }
     else if ((8 < bit_cntr)&&( bit_cntr < 16))
     {
-        printf("8 < bit_cntr < 16 \n");
 
         tmp_b[0] = tmp_b[0] + uint8_t(value >> (bit_cntr - remain_bits));
         fwrite(tmp_b,1,1,fp);
@@ -957,20 +1001,22 @@ int File_Format::insert_value(int bit_cntr, int value)
         if (tmp_b[0] == 0xff)
         {
 
-            printf("in 0xff \n");
+            printf("in 0xff (8<  <16 )   remain_bits = %d  value = %d   bit_cntr = %d\n",remain_bits,value,bit_cntr);
             if ((bit_cntr - remain_bits) < 7)
             {
-                remain_bits = 8 - (bit_cntr - remain_bits);
-                tmp_b[0] = uint8_t(value << remain_bits);
+                remain_bits = 7 - (bit_cntr - remain_bits);
+                tmp_b[0] = (uint8_t(value << (remain_bits+1)))>>1;
+
             }
             else if ((bit_cntr - remain_bits) == 7)
             {
+
                 tmp_b[0] = uint8_t(value);
                 fwrite(tmp_b,1,1,fp);
 
                 if (tmp_b[0] == 0xff)
                 {
-                    printf("in 0xff \n");
+                  printf("in 0xff (8<  <16    bit -remain_bits == 7)remain_bits = %d  value = %d   bit_cntr = %d\n",remain_bits,value,bit_cntr);
                    tmp_b[0] = 0;
                   remain_bits = 7;
                 }
@@ -987,9 +1033,9 @@ int File_Format::insert_value(int bit_cntr, int value)
 
                 if (tmp_b[0] == 0xff)
                 {
-                    printf("in 0xff \n");
+                    printf("in 0xff (8< <16   else )remain_bits = %d  value = %d   bit_cntr = %d\n",remain_bits,value,bit_cntr);
                     remain_bits = 7 - (bit_cntr - remain_bits - 8);
-                    tmp_b[0] = uint8_t(value << remain_bits);
+                    tmp_b[0] = (uint8_t(value << (remain_bits+1)))>>1;
                 }
                 else
                 {
@@ -1000,6 +1046,7 @@ int File_Format::insert_value(int bit_cntr, int value)
         }
         else
         {
+
             if ((bit_cntr - remain_bits) < 8)
             {
                 remain_bits = 8 - (bit_cntr - remain_bits);
@@ -1012,9 +1059,9 @@ int File_Format::insert_value(int bit_cntr, int value)
 
                 if (tmp_b[0] == 0xff)
                 {
-                    printf("in 0xff \n");
-                   tmp_b[0] = 0;
-                  remain_bits = 7;
+                    printf("in 0xff (else   bit - remain_bits  == 8)remain_bits = %d  value = %d   bit_cntr = %d\n",remain_bits,value,bit_cntr);
+                    tmp_b[0] = 0;
+                    remain_bits = 7;
                 }
                 else
                 {
@@ -1029,9 +1076,9 @@ int File_Format::insert_value(int bit_cntr, int value)
 
                 if (tmp_b[0] == 0xff)
                 {
-                    printf("in 0xff \n");
+                    printf("in 0xff (else   else)remain_bits = %d  value = %d   bit_cntr = %d\n",remain_bits,value,bit_cntr);
                     remain_bits = 7 - (bit_cntr - remain_bits - 8);
-                    tmp_b[0] = uint8_t(value << remain_bits);
+                    tmp_b[0] = (uint8_t(value << (remain_bits+1)))>>1;
                 }
                 else
                 {
@@ -1064,19 +1111,29 @@ int File_Format::push_bytes(int byte_cnt, uint32_t value)
 }
 int File_Format::insert_zeros(int number_of_zeros)
 {
-    for (int i = 0; i < number_of_zeros; ++i)
+    //printf("in function zero = %d\n",number_of_zeros );
+    if (number_of_zeros >= 0)
     {
-        insert_value(1,0);
+
+        for (int i = 0; i < number_of_zeros; ++i)
+        {
+            insert_value(1,0);
+        }
+
+        insert_value(1,1);
     }
-    insert_value(1,1);
+    else
+    {
+        printf("eeror in no of zero\n");
+    }
 
     return 1;
 }
 //----------------------- make file_____________________//
 
-int File_Format::run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q, queue<pktParamfnl> *qnt_q, img_hdr_info *hdr_info)
+int File_Format::run(queue<int> *hdr_q_r,queue<uint8_t> *code_stream_q_r,queue<int> *hdr_q_g,queue<uint8_t> *code_stream_q_g,queue<int> *hdr_q_b,queue<uint8_t> *code_stream_q_b,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info)
 {
-    fp = fopen("../../bmw_1024.jp2","wb");
+    fp = fopen("../../bmw1024.jp2","wb");
     tmp_b[0] = 0;
     remain_bits = 8;
 
@@ -1085,7 +1142,7 @@ int File_Format::run(queue<int> *hdr_q,queue<uint8_t> *code_stream_q, queue<pktP
     JP2_Signature_box();
     Profile_box();
     JP2_Header_box(hdr_info,8);                   // width =128 // height = 128 //
-    Code_Stream_box(hdr_q,code_stream_q,qnt_q,hdr_info);
+    Code_Stream_box(hdr_q_r,code_stream_q_r,hdr_q_g,code_stream_q_g,hdr_q_b,code_stream_q_b,qnt_q,hdr_info);
     fclose(fp);
     return 1;
 }
