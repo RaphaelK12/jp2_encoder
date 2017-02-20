@@ -51,7 +51,7 @@ struct cblock{
         };
 
 struct sbandPkt{
-    int    sband[512][512];
+    int    sband[64][64];
 };
 
 struct context {
@@ -94,7 +94,8 @@ struct img_hdr_info
 {
  int width;
  int height;
- int no_of_cmp;   
+ int no_of_cmp;
+ int no_of_tiles;   
 };
 
 #endif /* PACKETDEFS_H__ */

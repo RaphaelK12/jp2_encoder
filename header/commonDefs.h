@@ -19,8 +19,11 @@
 using namespace std;
 
 const int bpsize = 64;
-const int sbsize = 512;
+const int sbsize = 64;
 const int coefShift = 13;
+const int prec = 7;
 const int preShift = 11;
+const int tile_width =128;
+const int tile_height =128;
 
 #endif /*COMMONDEFS_H__*/
