@@ -151,7 +151,7 @@ void Quantizer::parameterParser(int precLL, int precLH, int precHL, int precHH, 
     p = floor(log2(stepsize)) - coefShift;
     n = preShift - floor(log2(stepsize));
     mantissa = (n<0 ? stepsize >> -n : stepsize << n)& 0x7ff;
-    exponent = precLL - p;
+    exponent = prec - p;
     cout << exponent << "\t" << mantissa << endl;
     pktBPC.LLe = exponent;
     pktfnl.LLe = exponent;
@@ -161,7 +161,7 @@ void Quantizer::parameterParser(int precLL, int precLH, int precHL, int precHH, 
     p = floor(log2(stepsize)) - coefShift;
     n = preShift - floor(log2(stepsize));
     mantissa = (n<0 ? stepsize >> -n : stepsize << n)& 0x7ff;
-    exponent = precLH - p;
+    exponent = prec - p;
     cout << exponent << "\t" << mantissa << endl;
     pktBPC.LHe = exponent;
     pktfnl.LHe = exponent;
@@ -171,7 +171,7 @@ void Quantizer::parameterParser(int precLL, int precLH, int precHL, int precHH, 
     p = floor(log2(stepsize)) - coefShift;
     n = preShift - floor(log2(stepsize));
     mantissa = (n<0 ? stepsize >> -n : stepsize << n)& 0x7ff;
-    exponent = precHL - p;
+    exponent = prec - p;
     cout << exponent << "\t" << mantissa << endl;
     pktBPC.HLe = exponent;
     pktfnl.HLe = exponent;
@@ -181,7 +181,7 @@ void Quantizer::parameterParser(int precLL, int precLH, int precHL, int precHH, 
     p = floor(log2(stepsize)) - coefShift;
     n = preShift - floor(log2(stepsize));
     mantissa = (n<0 ? stepsize >> -n : stepsize << n)& 0x7ff;
-    exponent = precHH - p;
+    exponent = prec - p;
     cout << exponent << "\t" << mantissa << endl;
     pktBPC.HHe = exponent;
     pktfnl.HHe = exponent;

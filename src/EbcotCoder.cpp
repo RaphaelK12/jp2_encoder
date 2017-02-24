@@ -696,7 +696,7 @@ int EbcotCoder::BitPlaneSeparator(int (&codeblock)[bpsize][bpsize], int (&bitpla
         //printf("\n");
     }
     // cout << "Number of non zero bit planes :" << maxplane << endl;
-    printf("maxCellVal: %d\n",cellvalmax);
+    //printf("maxCellVal: %d\n",cellvalmax);
     return maxplane;
 }
 
@@ -734,7 +734,7 @@ int EbcotCoder::CodeBlockCoder(int (&codeblock)[bpsize][bpsize], int subband, qu
 
     zerobp = (maxplanes + 2 - 1) - (bitplaneCount + 1);
     storecount = bitplaneCount ;
-    cout << "bpcount :" << bitplaneCount + 1<< " : "<< maxplanes << endl;
+   /// cout << "bpcount :" << bitplaneCount + 1<< " : "<< maxplanes << endl;
     while (1) {
         // creating 2D array bit plane
         for (row = 0; row < bpsize; row ++) {
@@ -786,7 +786,7 @@ int EbcotCoder::CodeBlockCoder(int (&codeblock)[bpsize][bpsize], int subband, qu
         }
         else {
             codingPassCount = storecount*3+1 - flag;
-            cout << "codingPassCount:" << codingPassCount << endl;
+          //  cout << "codingPassCount:" << codingPassCount << endl;
             break;
         }
     }
@@ -815,8 +815,8 @@ int EbcotCoder::cbloader (queue <sbandPkt> *llblock, queue <sbandPkt> *lhblock, 
     cblock cbhl;
     cblock cbhh;
 
-    int sbwidth = 512;
-    int sbheight = 512;
+    int sbwidth = 64;
+    int sbheight = 64;
     int istart, iend, jstart, jend = 0;
     int lldone = 0;
 
@@ -832,7 +832,7 @@ int EbcotCoder::cbloader (queue <sbandPkt> *llblock, queue <sbandPkt> *lhblock, 
             for (int i = 0; i < bpsize; i++) {
                 col = colinit;
                 for (int j = 0; j < bpsize; j++) {
-                    printf("(%d,%d) - (%d,%d)\n",i,j,row,col);
+                   // printf("(%d,%d) - (%d,%d)\n",i,j,row,col);
                     cbll.array[i][j] = subbandll.sband[row][col];
                     cblh.array[i][j] = subbandlh.sband[row][col];
                     cbhl.array[i][j] = subbandhl.sband[row][col];

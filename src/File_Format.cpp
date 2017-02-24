@@ -1846,7 +1846,7 @@ int File_Format::push_q_zeros(int number_of_zeros)
 
 int File_Format::run(queue<int> *hdr_q_r,queue<uint8_t> *code_stream_q_r,queue<int> *hdr_q_g,queue<uint8_t> *code_stream_q_g,queue<int> *hdr_q_b,queue<uint8_t> *code_stream_q_b,queue<pktParamfnl> *qnt_q,img_hdr_info *hdr_info)
 {
-    fp = fopen("../../bmw1024_tile_TP.jp2","wb");
+    fp = fopen("../../bmw_1024_tite.jp2","wb");
     tmp_b[0] = 0;
     remain_bits = 8;
 
